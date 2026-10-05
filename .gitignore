@@ -1,0 +1,58 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.session
+*.cookies
+account_cookies.json
+olx_cookies.json
+olx_cookie.env
+userdata/
+chrome-profile/
+
+# Databases & State
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Logs
+*.log
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+.Python
+env/
+venv/
+.venv/
+.pytest_cache/
+
+# Node & Frontend
+node_modules/
+.next/
+dist/
+build/
+
+# Go & Compiled binaries
+*.exe
+*.dll
+*.dylib
+main
+*-alerter
+*-monitor
+*-bot
+*-sender
+*-auth
+xianyu_bot
+depop-alerter
+olx-bot
+etsy-monitor
+
+# OS files & Archives
+.DS_Store
+Thumbs.db
+*.tar.gz
+*.zip
