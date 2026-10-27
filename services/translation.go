@@ -27,7 +27,7 @@ var GlobalTranslator *DeepLTranslationService
 
 // Regex to check for CJK (Chinese, Japanese, Korean) characters.
 // This includes Hiragana, Katakana, Kanji, and Chinese characters.
-var cjkCharsRe = regexp.MustCompile(`[\x{3000}-\x{303f}\x{3040}-\x{309f}\x{30a0}-\x{30ff}\x{4e00}-\x{9faf}\x{ff00}-\x{ff9f}]`)
+var cjkCharsRe = regexp.MustCompile(`[\x{3000}-\x{303f}\x{3040}-\x{309f}\x{30a0}-\x{30ff}\x{4e00}-\x{9faf}\x{ff00}-\x{ff9f}\x{ac00}-\x{d7af}]`)
 
 var deeplLimiter = struct {
 	sync.Mutex
