@@ -22,7 +22,7 @@ class GoofishItem:
         want_count: str,
         target_url: str,
         publish_ts: Optional[int] = None,       # Unix timestamp in ms
-        relative_time: str = "",                 # e.g. "8小时前发布" → "8 ч. назад"
+        relative_time: str = "",                 # e.g. "8小时前发布" → "8h ago"
         is_verified: bool = False,               # 验货宝 platform verification badge
         is_new_item: bool = False,               # 全新 — brand new condition tag
         age_minutes: Optional[int] = None,       # How many minutes ago published
@@ -53,14 +53,14 @@ class GoofishItem:
         if self.age_minutes is None:
             return ""
         if self.age_minutes < 10:
-            return "🔥 Только что"
+            return "🔥 Just now"
         if self.age_minutes < 60:
-            return f"🟢 {self.age_minutes} мин. назад"
+            return f"🟢 {self.age_minutes} min ago"
         if self.age_minutes < 1440:
             hours = self.age_minutes // 60
-            return f"🟡 {hours} ч. назад"
+            return f"🟡 {hours} hr ago"
         days = self.age_minutes // 1440
-        return f"⚪️ {days} д. назад"
+        return f"⚪️ {days} d ago"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -200,7 +200,7 @@ def _parse_title(ex_content: dict) -> str:
     2. exContent -> title (plain string)
     """
     detail_params = ex_content.get("detailParams") or {}
-    title = detail_params.get("title") or ex_content.get("title") or "Без названия"
+    title = detail_params.get("title") or ex_content.get("title") or "Untitled"
     return title.strip()
 
 

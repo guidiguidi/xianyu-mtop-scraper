@@ -1,116 +1,115 @@
-# 🐟 Xianyu / Goofish Telegram Search & Monitor Bot
+# 🐟 Xianyu / Goofish MTOP Reverse-Engineered Scraper & Monitor
 
-Премиальный, полностью автоматизированный приватный Telegram-бот для интерактивного поиска товаров на китайской площадке **Xianyu (Goofish)** и фонового мониторинга новых лотов с автообновлением cookies через антидетект-эмуляцию и резидентные прокси **ASocks**.
-
----
-
-## 🌟 Основной функционал системы
-
-Бот решает главную проблему парсинга Xianyu — **постоянное устаревание H5-токенов (`_m_h5_tk`) и жесткие алгоритмы проверки ботов (fingerprinting)**. 
-
-### 1. 🔍 Интерактивный поиск товаров (`/search`)
-* Выполняет мгновенный поиск лотов по ключевому слову.
-* Возвращает **премиальные карточки товаров** с первыми фотографиями лотов, актуальной ценой в юанях (¥), никнеймом продавца, регионом и количеством желающих (want count).
-* Под сообщениями создаются удобные **inline-кнопки**:
-  * **◀️ Назад / Вперед ▶️**: Удобная постраничная навигация.
-  * **Фильтры цен**: Мгновенное переключение ценовых категорий (до ¥1000, ¥1000-5000 и т.д.).
-  * **🔔 Добавить в мониторинг**: Запуск фонового отслеживания прямо из поисковой выдачи!
-
-### 2. 🔔 Фоновый мониторинг новых лотов (`/monitor`)
-* Бот каждые 5 минут в фоновом режиме опрашивает Xianyu по твоим сохраненным фильтрам.
-* Сравнивает полученные товары с кэш-базой данных в **SQLite**.
-* При появлении нового объявления бот мгновенно присылает фото-уведомление с прямой ссылкой на покупку.
-* Управление задачами через `/monitors` (список) и `/unmonitor <ID>` (удаление).
-
-### 3. 🍪 Автоматическая антидетект-эмуляция куки (Playwright)
-* Тебе больше не нужно вручную копировать куки каждые 24 часа. 
-* При возникновении ошибки авторизации бот запускает скрытый (headless) браузер **Chromium**.
-* Внедряет твои долгоживущие сессионные куки (`cookie2`) и имитирует действия реального пользователя для прохождения проверок.
-* Извлекает свежие H5-токены подписи и динамические отпечатки `tfstk`, сохраняет их в БД и продолжает работу.
-
-### 4. 📡 Умная синхронизация прокси и гео-локации (ASocks API)
-* Бот работает в связке с твоим кабинетом **ASocks**.
-* Он автоматически запрашивает активный резидентный прокси-порт из твоего списка (или создает новый, если все выключены).
-* **Синхронизирует антидетект**: бот узнает страну и город прокси (например, Манчестер, Великобритания) и настраивает браузер Playwright под это гео:
-  * **Локаль**: `en-GB`
-  * **Временная зона**: `Europe/London`
-  * **GPS-координаты**: Широта `53.4808` и Долгота `-2.2426` (точные координаты прокси-сервера!).
-* Для алгоритмов Xianyu соединение выглядит на 100% легитимно: IP-адрес, часовой пояс, язык браузера и геолокация идеально совпадают!
+High-performance, automated Telegram monitoring agent and REST API pipeline for **Alibaba Xianyu (Goofish)**. Features client-side MTOP MD5 signature generation, Playwright-driven self-healing session management, anti-detect browser fingerprint masking, and dynamic **ASocks** residential proxy synchronization.
 
 ---
 
-## 🛡 Пакет глубокого обхода Fingerprinting (Антидетект)
+## 🌟 Key Architecture & Capabilities
 
-В модуле `browser_refresher.py` развернута продвинутая система подмены цифрового отпечатка браузера, аналогичная решениям уровня AdsPower и Multilogin:
+Xianyu scraping requires overcoming strict platform constraints: **rapid H5 token expiration (`_m_h5_tk`) and aggressive browser fingerprinting WAFs**.
 
-1. **🎭 Webdriver Evasion**: Полное удаление флага `navigator.webdriver` из прототипа браузера. Защитные JS-скрипты Alibaba не могут обнаружить автоматизацию.
-2. **💻 Hardware Spoofing**: Эмуляция аппаратных параметров мощной рабочей станции. Количество ядер процессора (`hardwareConcurrency`) и объем оперативной памяти (`deviceMemory`) принудительно устанавливаются в значение `8`, а платформа переопределяется на `MacIntel`.
-3. **🎨 Canvas Noise Injection**: При попытке сайта прочитать Canvas-отпечаток (метод `toDataURL`), скрипт подмешивает микроскопический, визуально невидимый шум к первому пикселю изображения. Хеш Canvas становится уникальным, предотвращая отслеживание устройства.
-4. **🎮 WebGL Vendor Masking**: Стандартные видеокарты безголового Chromium маскируются под реальный графический ускоритель `ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11)`.
-5. **🎵 AudioContext Hash Spoofing**: Добавление незаметного математического шума в звуковой буфер при частотном анализе (`AudioBuffer.prototype.getChannelData`) для обхода звукового фингерпринтинга.
-6. **🔒 WebRTC Leakage Prevention**: Блокировка утечек реального локального IP-адреса из-под прокси через WebRTC протокол.
+### 1. 🔍 Real-Time Item Discovery (`/search` & REST API)
+* Executes concurrent listing lookups via reverse-engineered MTOP endpoints.
+* Returns structured item cards with primary image media, CNY (¥) pricing, seller handle, origin location, and user interest metrics ("want count").
+* Interactive navigation via Telegram inline keyboards:
+  * **◀️ Prev / Next ▶️**: Cursor and page-based result traversal.
+  * **Price Filters**: Instant category filtering (e.g. `< ¥1000`, `¥1000 - ¥5000`).
+  * **🔔 Track in Monitor**: Register active background monitor task directly from search results.
+
+### 2. 🔔 Resilient Polling & Notification Engine (`/monitor`)
+* Periodic background scanning worker polling saved query parameters against SQLite state cache.
+* Prevents duplicate alerts by maintaining unique item ID sets and price hash indexing.
+* Dispatches formatted rich cards with direct buy links to target chat channels.
+* Task lifecycle management via `/monitors` (list) and `/unmonitor <ID>` (delete).
+
+### 3. 🍪 Self-Healing Session Engine (Headless Playwright)
+* Eliminates manual token refresh cycles.
+* On upstream `401 / TOKEN_EXPIRED` detection, automatically spawns headless Chromium.
+* Injects long-lived session credentials (`cookie2`) and simulates human navigation to clear security challenges.
+* Extracts renewed `_m_h5_tk` tokens and dynamic `tfstk` device signatures, persisting them back to SQLite and resuming ingestion uninterrupted.
+
+### 4. 📡 Residential Proxy & Geo Synchronization (ASocks API)
+* Native integration with ASocks residential proxy pool.
+* Automatically selects or provisions active residential ports with country-level targeting.
+* **Synchronizes anti-detect profile**: aligns Playwright browser environment with upstream proxy geolocation:
+  * **Locale**: `en-US` / target proxy locale
+  * **Timezone**: Aligned with proxy exit node (e.g., `Europe/London`)
+  * **Geolocation**: Exact latitude/longitude matching proxy IP location.
+* Matches IP, timezone, system language, and geolocation coordinates to maintain 100% session legitimacy.
 
 ---
 
-## 📐 Архитектура проекта и назначение файлов
+## 🛡 Anti-Detect Fingerprinting Countermeasures
+
+Module `services/browser_refresher.py` embeds robust fingerprint masking:
+
+1. **🎭 Webdriver Evasion**: Complete removal of `navigator.webdriver` across prototypes with native property emulation.
+2. **🖥 Chrome Runtime & Plugin Shim**: Injects synthetic `window.chrome` objects, plugin arrays, and standard MIME types.
+3. **🎨 Canvas & WebGL Defense**: Injects subtle mathematical noise into 2D canvas exports (`toDataURL`, `getImageData`) and WebGL renderer parameters to prevent tracking while preserving visual rendering.
+4. **🎵 AudioContext Hash Spoofing**: Introduces micro-jitter into `AudioBuffer.prototype.getChannelData` to defeat acoustic waveform profiling.
+5. **🔒 WebRTC Leakage Prevention**: Enforces strict routing policy to block local network IP leaks through STUN/TURN handshakes.
+
+---
+
+## 📐 Project Structure
 
 ```
-xianyu/
+xianyu-mtop-scraper/
 │
-├── bot.py                      # Главный исполняемый файл. Запускает Telegram long-polling и фоновый сканер мониторинга.
-├── config.py                   # Модуль конфигурации (Pydantic). Загружает и валидирует настройки из .env.
-├── database.py                 # Асинхронный SQLite менеджер (создает таблицы, хранит задачи, кэш лотов и куки).
-├── goofish_client.py           # Асинхронный клиент для API Xianyu. Вычисляет MD5 сигнатуры MTOP и обрабатывает ошибки сессии.
+├── bot.py                      # Main entrypoint: runs Telegram polling and background monitor worker
+├── api_server.py               # REST API service exposing search and scraping endpoints
+├── config.py                   # Pydantic configuration loader validating .env settings
+├── database.py                 # Async SQLite manager for tasks, cache, and token persistence
+├── goofish_client.py           # Core client: computes Alibaba MTOP MD5 signatures and handles requests
 │
 ├── services/
-│   ├── asocks_service.py       # API-клиент для ASocks. Управляет резидентными портами и гео-данными прокси.
-│   ├── browser_refresher.py    # Playwright-модуль. Подменяет отпечатки (fingerprints), геолокацию, таймзону и рефрешит сессию.
-│   └── parser.py               # Извлекает и форматирует данные товаров (парсит многослойные структуры цен, чистит HEIC фото).
+│   ├── asocks_service.py       # ASocks residential proxy manager and geo resolver
+│   ├── browser_refresher.py    # Playwright browser automation for headless cookie renewal
+│   ├── parser.py               # Multi-tier price parser and item metadata normalizer
+│   └── query_expander.go       # Multi-language search query expansion utilities
 │
 ├── handlers/
-│   ├── search.py               # Обработка команды /search, кнопок перелистывания страниц и ценовых фильтров.
-│   ├── monitor.py              # Команды добавления, просмотра и удаления фонового слежения (/monitor, /monitors).
-│   └── settings.py             # Интерфейс обновления куки через чат (/setcookies) и диагностика статуса соединения (/status).
+│   ├── search.py               # /search command handler and pagination callbacks
+│   ├── monitor.py              # /monitor task registration and management handlers
+│   └── settings.py             # Session cookie injection and diagnostic handlers
 │
-├── Dockerfile                  # Инструкция сборки Docker-образа (устанавливает Linux-библиотеки и браузер Chromium).
-├── docker-compose.yml          # Управление контейнером с сохранением базы данных в постоянный том (volume).
-└── requirements.txt            # Список зависимостей Python (aiogram, aiohttp, playwright, aiosqlite).
+├── Dockerfile                  # Container definition with Chromium dependencies
+├── docker-compose.yml          # Production deployment compose file with persistent volumes
+└── requirements.txt            # Python dependencies (aiogram, aiohttp, playwright, aiosqlite)
 ```
 
 ---
 
-## 🚀 Быстрый запуск
+## 🚀 Quick Start
 
-### 1. Настройка окружения
-Создай или отредактируй файл `.env` в корне проекта:
+### 1. Environment Configuration
+Create or configure `.env` in the project root:
 ```ini
-# Токен бота от @BotFather
+# Telegram Bot Token from @BotFather
 BOT_TOKEN=your_telegram_bot_token_here
 
-# Твой личный Telegram ID (чтобы ботом не пользовался никто посторонний)
-ALLOWED_USER_IDS=525127130
+# Authorized Admin Telegram User IDs
+ALLOWED_USER_IDS=123456789
 
-# API-ключ ASocks для автоподбора прокси и гео-эмуляции
-ASOCKS_API_KEY=Reb2lwX9htZBKHqeZMLLfY0O8sdg9vH5
+# ASocks API Key for dynamic proxy allocation
+ASOCKS_API_KEY=your_asocks_api_key_here
 ```
 
-### 2. Запуск через Docker (Рекомендуется)
-Собери и запусти контейнер в фоновом режиме:
+### 2. Run with Docker (Recommended)
 ```bash
 docker compose up -d --build
 ```
-База данных `xianyu_bot.db` и логи будут сохранены на хост-машине, поэтому при перезапусках или обновлениях бота твои поиски и куки не пропадут!
+Persistent SQLite storage and logs are mapped to the host directory.
 
-### 3. Локальный запуск (Альтернатива)
-Если запускаешь напрямую в терминале macOS/Linux:
+### 3. Local Execution
 ```bash
 pip3 install -r requirements.txt
 python3 -m playwright install chromium
 python3 bot.py
 ```
 
-### 4. Первичная инициализация сессии
-1. Зайди на [goofish.com](https://www.goofish.com) через свой Antidetect браузер под нужным профилем.
-2. Скопируй строку Cookie (из DevTools или расширения).
-3. Напиши своему боту в Telegram команду `/setcookies` и отправь скопированную строку.
-4. Бот применит её, свяжется с ASocks, настроит гео-локацию, проверит подключение и запустит автоматическую систему!
+### 4. Initial Session Setup
+1. Open [goofish.com](https://www.goofish.com) in your browser and log in.
+2. Copy your session cookie header (containing `cookie2` and `_m_h5_tk`).
+3. Send `/setcookies` to your Telegram bot and provide the cookie string.
+4. The bot validates the session, synchronizes proxy settings, and activates automated monitoring.

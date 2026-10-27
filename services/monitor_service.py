@@ -123,18 +123,18 @@ class MonitorService:
         escaped_keyword = html.escape(keyword)
         escaped_title = html.escape(t_title[:75])
         escaped_price = html.escape(str(item.price))
-        escaped_area = html.escape(t_area) if t_area else "Не указан"
-        escaped_nickname = html.escape(item.user_nickname) if item.user_nickname else "Не указан"
-        escaped_want = html.escape(item.want_count) if item.want_count else "Новый лот"
+        escaped_area = html.escape(t_area) if t_area else "Unspecified"
+        escaped_nickname = html.escape(item.user_nickname) if item.user_nickname else "Unspecified"
+        escaped_want = html.escape(item.want_count) if item.want_count else "New listing"
 
         caption = (
-            f"🔔 <b>Новое поступление! (Монитор: {escaped_keyword})</b>\n\n"
+            f"🔔 <b>New Listing Alert! (Monitor: {escaped_keyword})</b>\n\n"
             f"🐟 <b>{escaped_title}...</b>\n\n"
-            f"💰 Цена: <code>{escaped_price}</code>\n"
-            f"📍 Регион: {escaped_area}\n"
-            f"👤 Продавец: {escaped_nickname}\n"
+            f"💰 Price: <code>{escaped_price}</code>\n"
+            f"📍 Region: {escaped_area}\n"
+            f"👤 Seller: {escaped_nickname}\n"
             f"📦 {escaped_want}\n\n"
-            f'<a href="{item.share_url}">🔗 Купить на Xianyu</a>'
+            f'<a href="{item.share_url}">🔗 View on Xianyu</a>'
         )
         
         pic = item.pic_url if item.pic_url else "https://img.alicdn.com/tps/i4/TB1OKd7JXXXXXb1XFXXc8s9FXXX-400-400.png"

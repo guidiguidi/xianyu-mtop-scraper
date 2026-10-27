@@ -17,14 +17,14 @@ class SettingsState(StatesGroup):
 @router.message(Command("setcookies"))
 async def cmd_set_cookies_prompt(message: Message, state: FSMContext):
     if not is_authorized(message.from_user.id):
-        await message.answer("❌ У вас нет доступа к этому боту.")
+        await message.answer("❌ Access denied.")
         return
 
     await message.answer(
-        "🍪 *Обновление Cookies Goofish*\n\n"
-        "Отправьте мне всю строку Cookies (из Antidetect браузера или DevTools).\n"
-        "Обязательно должны присутствовать `cookie2` и `_m_h5_tk`.\n\n"
-        "Отправьте /cancel для отмены.",
+        "🍪 *Update Goofish Session Cookies*\n\n"
+        "Send raw session Cookie header (from anti-detect browser or DevTools).\n"
+        "Must include `cookie2` and `_m_h5_tk`.\n\n"
+        "Send /cancel to abort.",
         parse_mode="Markdown"
     )
     await state.set_state(SettingsState.waiting_for_cookies)
@@ -33,22 +33,22 @@ async def cmd_set_cookies_prompt(message: Message, state: FSMContext):
 @router.message(SettingsState.waiting_for_cookies, Command("cancel"))
 async def cmd_cancel_cookies(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer("🔄 Действие отменено.")
+    await message.answer("🔄 Action cancelled.")
 
 @router.message(SettingsState.waiting_for_cookies)
 async def process_cookies_input(message: Message, state: FSMContext):
     if not is_authorized(message.from_user.id):
-        await message.answer("❌ У вас нет доступа.")
+        await message.answer("❌ Access denied.")
         await state.clear()
         return
 
     cookie_str = message.text.strip()
     if not cookie_str:
-        await message.answer("⚠️ Пустая строка. Попробуйте еще раз.")
+        await message.answer("⚠️ Empty input. Please try again.")
         return
 
     if "_m_h5_tk" not in cookie_str:
-        await message.answer("⚠️ В строке Cookies отсутствует обязательный параметр `_m_h5_tk`. Проверьте копирование и попробуйте еще раз.")
+        await message.answer("⚠️ Missing required parameters `_m_h5_tk` or `cookie2`. Please check and resend.")
         return
 
     db = get_db()
@@ -57,23 +57,23 @@ async def process_cookies_input(message: Message, state: FSMContext):
 
     # Try verifying the new cookies
     client = GoofishSearchClient(cookies_str=cookie_str, proxy_url=settings.PROXY_URL)
-    status_msg = await message.answer("💾 Cookies сохранены в базу данных. Проверяю соединение с API...")
+    status_msg = await message.answer("💾 Cookies saved to database. Validating API connectivity...")
     
     try:
         raw_res = await client.search(keyword="test", page=1, rows_per_page=1)
-        ret_msg = raw_res.get("ret", ["Неизвестно"])[0]
+        ret_msg = raw_res.get("ret", ["Unknown"])[0]
         
         if "SUCCESS" in ret_msg:
-            await status_msg.edit_text("✅ *Cookies успешно сохранены и проверены!* Соединение с Goofish API работает.", parse_mode="Markdown")
+        await status_msg.edit_text("✅ *Cookies saved and verified!* API connection stable.")
         else:
-            await status_msg.edit_text(f"⚠️ *Cookies сохранены, но тест API вернул ошибку:* `{ret_msg}`. Возможно, куки истекли или требуется проверка.", parse_mode="Markdown")
+            await status_msg.edit_text(f"⚠️ *Cookies persisted but API probe returned error:* `{ret_msg}`. Cookies may have expired or verification is required.", parse_mode="Markdown")
     except Exception as e:
-        await status_msg.edit_text(f"⚠️ *Cookies сохранены, но при проверке произошла ошибка:* `{str(e)}`.\nУбедитесь, что прокси работает корректно.", parse_mode="Markdown")
+        await status_msg.edit_text(f"⚠️ *Cookies persisted but verification threw error:* `{str(e)}`.\nEnsure proxy connection is operational.", parse_mode="Markdown")
 
 @router.message(Command("status"))
 async def cmd_status(message: Message):
     if not is_authorized(message.from_user.id):
-        await message.answer("❌ У вас нет доступа к этому боту.")
+        await message.answer("❌ Access denied.")
         return
 
     db = get_db()
@@ -81,15 +81,15 @@ async def cmd_status(message: Message):
     client = GoofishSearchClient(cookies_str=active_cookies, proxy_url=settings.PROXY_URL)
     
     has_token = "_m_h5_tk" in client.cookies
-    token_val = client.cookies.get("_m_h5_tk", "отсутствует")
+    token_val = client.cookies.get("_m_h5_tk", "missing")
     
-    proxy_status = f"`{settings.PROXY_URL}`" if settings.PROXY_URL else "❌ Отключен"
+    proxy_status = f"`{settings.PROXY_URL}`" if settings.PROXY_URL else "❌ Disabled"
     
     await message.answer(
-        f"🖥 *Статус Системы Xianyu Bot*\n\n"
-        f"📡 Прокси: {proxy_status}\n"
-        f"🍪 Наличие H5 токена: {'✅ Да' if has_token else '❌ Нет'}\n"
-        f"🔑 Токен: `{token_val}`\n\n"
-        f"Для обновления Cookies отправьте: /setcookies",
+        f"🖥 *Xianyu Bot System Status*\n\n"
+        f"📡 Proxy: {proxy_status}\n"
+        f"🍪 H5 Token Status: {'✅ Active' if has_token else '❌ Inactive'}\n"
+        f"🔑 Token: `{token_val}`\n\n"
+        f"To refresh cookies, run: /setcookies",
         parse_mode="Markdown"
     )

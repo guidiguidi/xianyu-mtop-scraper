@@ -335,7 +335,7 @@ func parseTitle(exContent map[string]interface{}) string {
 		return strings.TrimSpace(title)
 	}
 
-	return "Без названия"
+	return "Untitled"
 }
 
 func parseNickname(exContent map[string]interface{}) string {

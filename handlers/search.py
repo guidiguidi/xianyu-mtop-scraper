@@ -29,13 +29,13 @@ def build_search_keyboard(query: str, page: int, price_min: str = "", price_max:
     """Builds interactive inline buttons for search control."""
     buttons = [
         [
-            InlineKeyboardButton(text="◀️ Назад", callback_data=f"page:{page-1}:{query}:{price_min}:{price_max}"),
-            InlineKeyboardButton(text=f"📄 Стр. {page}", callback_data="noop"),
-            InlineKeyboardButton(text="Вперед ▶️", callback_data=f"page:{page+1}:{query}:{price_min}:{price_max}")
+            InlineKeyboardButton(text="◀️ Prev", callback_data=f"page:{page-1}:{query}:{price_min}:{price_max}"),
+            InlineKeyboardButton(text=f"📄 Page {page}", callback_data="noop"),
+            InlineKeyboardButton(text="Next ▶️", callback_data=f"page:{page+1}:{query}:{price_min}:{price_max}")
         ],
         [
-            InlineKeyboardButton(text="💰 Любая цена", callback_data=f"price:{query}::"),
-            InlineKeyboardButton(text="💰 до ¥1000", callback_data=f"price:{query}::1000"),
+            InlineKeyboardButton(text="💰 Any Price", callback_data=f"price:{query}::"),
+            InlineKeyboardButton(text="💰 < ¥1000", callback_data=f"price:{query}::1000"),
             InlineKeyboardButton(text="💰 ¥1000-5000", callback_data=f"price:{query}:1000:5000")
         ],
         [
@@ -43,7 +43,7 @@ def build_search_keyboard(query: str, page: int, price_min: str = "", price_max:
             InlineKeyboardButton(text="💰 ¥15000+", callback_data=f"price:{query}:15000:")
         ],
         [
-            InlineKeyboardButton(text="🔔 Добавить в мониторинг", callback_data=f"addmon:{query}:{price_min}:{price_max}")
+            InlineKeyboardButton(text="🔔 Track in Monitor", callback_data=f"addmon:{query}:{price_min}:{price_max}")
         ]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -51,7 +51,7 @@ def build_search_keyboard(query: str, page: int, price_min: str = "", price_max:
 @router.message(Command("search"))
 async def cmd_search_prompt(message: Message, state: FSMContext):
     if not is_authorized(message.from_user.id):
-        await message.answer("❌ У вас нет доступа к этому боту.")
+        await message.answer("❌ Access denied.")
         return
 
     # Extract eventual inline text argument
@@ -61,19 +61,19 @@ async def cmd_search_prompt(message: Message, state: FSMContext):
         await execute_search_action(message, query, 1)
         return
 
-    await message.answer("🔍 Введите поисковый запрос (например: <b>rick owens</b>):", parse_mode="HTML")
+    await message.answer("🔍 Enter search query (e.g. <b>rick owens</b>):", parse_mode="HTML")
     await state.set_state(SearchState.waiting_for_query)
 
 @router.message(SearchState.waiting_for_query)
 async def process_search_query(message: Message, state: FSMContext):
     if not is_authorized(message.from_user.id):
-        await message.answer("❌ У вас нет доступа к этому боту.")
+        await message.answer("❌ Access denied.")
         await state.clear()
         return
 
     query = message.text.strip()
     if not query:
-        await message.answer("⚠️ Пустой запрос. Попробуйте еще раз.")
+        await message.answer("⚠️ Query cannot be empty. Try again.")
         return
 
     await state.clear()
@@ -104,7 +104,7 @@ async def execute_search_action(
         on_cookies_refreshed=persist_refreshed_cookies
     )
 
-    status_msg = await message.answer("⏳ Выполняю поиск на Goofish...")
+    status_msg = await message.answer("⏳ Searching Goofish...")
     
     try:
         p_min = int(price_min) if price_min else None
@@ -122,7 +122,7 @@ async def execute_search_action(
         items = parse_search_response(raw_response)
         
         if not items:
-            await status_msg.edit_text("🔍 Ничего не найдено. Проверьте запрос, ценовой фильтр или обновите cookies через /setcookies.")
+            await status_msg.edit_text("🔍 No listings found. Verify query or refresh cookies via /setcookies.")
             return
 
         # Batch translate item titles and areas concurrently using DeepL
@@ -144,16 +144,16 @@ async def execute_search_action(
             translated_title, translated_area = translation_results[i]
             escaped_title = html.escape(translated_title[:80])
             escaped_price = html.escape(str(item.price))
-            escaped_area = html.escape(translated_area) if translated_area else "Не указан"
-            escaped_nickname = html.escape(item.user_nickname) if item.user_nickname else "Не указан"
+            escaped_area = html.escape(translated_area) if translated_area else "Unspecified"
+            escaped_nickname = html.escape(item.user_nickname) if item.user_nickname else "Unspecified"
             escaped_want = html.escape(item.want_count) if item.want_count else ""
 
             # Build badge line
             badges = []
             if item.is_verified:
-                badges.append("✅ Проверен платформой")
+                badges.append("✅ Verified Seller")
             if item.is_new_item:
-                badges.append("🆕 Новый")
+                badges.append("🆕 Brand New")
             if item.freshness_label:
                 badges.append(item.freshness_label)
             badge_line = "  ".join(badges)
@@ -162,16 +162,16 @@ async def execute_search_action(
             caption_parts = [
                 f"🐟 <b>{num} {escaped_title}...</b>",
                 "",
-                f"💰 Цена: <code>{escaped_price}</code>",
-                f"📍 Регион: {escaped_area}",
-                f"👤 Продавец: {escaped_nickname}",
+                f"💰 Price: <code>{escaped_price}</code>",
+                f"📍 Region: {escaped_area}",
+                f"👤 Seller: {escaped_nickname}",
             ]
             if escaped_want:
                 caption_parts.append(f"📦 {escaped_want}")
             if badge_line:
                 caption_parts.append(badge_line)
             caption_parts.append("")
-            caption_parts.append(f'<a href="{item.share_url}">🔗 Открыть на Xianyu</a>')
+            caption_parts.append(f'<a href="{item.share_url}">🔗 View on Xianyu</a>')
             caption = "\n".join(caption_parts)
 
             # Each item sends its own correct picture
@@ -191,7 +191,7 @@ async def execute_search_action(
         keyboard = build_search_keyboard(query, page, price_min, price_max)
         escaped_query = html.escape(query)
         await message.answer(
-            f"👇 Управление результатами по запросу <b>'{escaped_query}'</b> (стр. {page}):",
+            f"👇 Actions for <b>'{escaped_query}'</b> (page {page}):",
             reply_markup=keyboard,
             parse_mode="HTML"
         )
@@ -199,17 +199,17 @@ async def execute_search_action(
     except Exception as e:
         logger.exception("Error executing Xianyu search")
         try:
-            await status_msg.edit_text(f"❌ Ошибка поиска: {html.escape(str(e))}", parse_mode="HTML")
+            await status_msg.edit_text(f"❌ Search error: {html.escape(str(e))}", parse_mode="HTML")
         except Exception:
             # Fallback if status_msg was already deleted or not found
-            await message.answer(f"❌ Ошибка поиска: {html.escape(str(e))}", parse_mode="HTML")
+            await message.answer(f"❌ Search error: {html.escape(str(e))}", parse_mode="HTML")
 
 # --- Callback query navigation handlers ---
 
 @router.callback_query(F.data.startswith("page:"))
 async def process_page_callback(callback: CallbackQuery):
     if not is_authorized(callback.from_user.id):
-        await callback.answer("❌ У вас нет доступа.", show_alert=True)
+        await callback.answer("❌ Access denied.", show_alert=True)
         return
 
     data_parts = callback.data.split(":")
@@ -219,7 +219,7 @@ async def process_page_callback(callback: CallbackQuery):
     price_max = data_parts[4] if len(data_parts) > 4 else ""
 
     if page < 1:
-        await callback.answer("⚠️ Вы уже на первой странице.", show_alert=True)
+        await callback.answer("⚠️ Already on first page.", show_alert=True)
         return
 
     await callback.message.delete()
@@ -235,7 +235,7 @@ async def process_page_callback(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("price:"))
 async def process_price_callback(callback: CallbackQuery):
     if not is_authorized(callback.from_user.id):
-        await callback.answer("❌ У вас нет доступа.", show_alert=True)
+        await callback.answer("❌ Access denied.", show_alert=True)
         return
 
     data_parts = callback.data.split(":")
@@ -251,7 +251,7 @@ async def process_price_callback(callback: CallbackQuery):
         price_min=price_min,
         price_max=price_max
     )
-    await callback.answer(f"Применен фильтр цен: {price_min}-{price_max}")
+    await callback.answer(f"Applied price filter: {price_min}-{price_max}")
 
 @router.callback_query(F.data == "noop")
 async def process_noop_callback(callback: CallbackQuery):

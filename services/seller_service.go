@@ -20,35 +20,35 @@ func GetSellerProfileCard(client *goofish.SearchClient, userID string) (string, 
 	}
 
 	// Map Zhima level to premium Russian badges
-	zhimaBadge := "⚪️ <i>Рейтинг Zhima не определен или скрыт</i>"
+	zhimaBadge := "⚪️ <i>Zhima Credit not available or hidden</i>"
 	if prof.ZhimaLevel != "" {
 		switch {
 		case strings.Contains(prof.ZhimaLevel, "极好") || strings.Contains(prof.ZhimaLevel, "Outstanding"):
-			zhimaBadge = "🟢 <b>Zhima Credit: Превосходно (极好)</b> — 🛡️ Максимальное доверие!"
+			zhimaBadge = "🟢 <b>Zhima Credit: Outstanding (极好)</b> — 🛡️ Maximum Trust!"
 		case strings.Contains(prof.ZhimaLevel, "优秀") || strings.Contains(prof.ZhimaLevel, "Excellent"):
-			zhimaBadge = "🔵 <b>Zhima Credit: Отлично (优秀)</b> — ✅ Высокое доверие."
+			zhimaBadge = "🔵 <b>Zhima Credit: Excellent (优秀)</b> — ✅ High Trust."
 		case strings.Contains(prof.ZhimaLevel, "良好") || strings.Contains(prof.ZhimaLevel, "Good"):
-			zhimaBadge = "🟡 <b>Zhima Credit: Хорошо (良好)</b> — ⚠️ Среднее доверие."
+			zhimaBadge = "🟡 <b>Zhima Credit: Good (良好)</b> — ⚠️ Moderate Trust."
 		case strings.Contains(prof.ZhimaLevel, "中等") || strings.Contains(prof.ZhimaLevel, "Medium"):
-			zhimaBadge = "🟠 <b>Zhima Credit: Средне (中等)</b> — ⚠️ Покупайте с осторожностью."
+			zhimaBadge = "🟠 <b>Zhima Credit: Medium (中等)</b> — ⚠️ Exercise caution."
 		default:
 			zhimaBadge = fmt.Sprintf("🔵 <b>Zhima Credit: %s</b>", prof.ZhimaLevel)
 		}
 	}
 
-	authBadge := "❌ Не подтвержден паспортом"
+	authBadge := "❌ Real-name identity unverified"
 	if prof.Authenticated {
-		authBadge = "✅ Личность подтверждена (实名认证)"
+		authBadge = "✅ Real-name verified (实名认证)"
 	}
 
-	genderBadge := "👤 Продавец"
+	genderBadge := "👤 Seller"
 	if prof.Gender == "F" || prof.Gender == "female" || prof.Gender == "0" {
-		genderBadge = "👩 Продавец (Женский пол)"
+		genderBadge = "👩 Seller (Female)"
 	} else if prof.Gender == "M" || prof.Gender == "male" || prof.Gender == "1" {
-		genderBadge = "👨 Продавец (Мужской пол)"
+		genderBadge = "👨 Seller (Male)"
 	}
 
-	registerDaysTrans := "Новый аккаунт"
+	registerDaysTrans := "New account"
 	if prof.RegisterDays != "" {
 		if GlobalTranslator != nil {
 			registerDaysTrans = GlobalTranslator.Translate(prof.RegisterDays, "ZH", "RU")
@@ -58,15 +58,15 @@ func GetSellerProfileCard(client *goofish.SearchClient, userID string) (string, 
 	}
 
 	card := fmt.Sprintf(
-		"👤 <b>Профиль Продавца Xianyu</b>\n\n"+
-			"🏷 Никнейм: <b>%s</b>\n"+
+		"👤 <b>Xianyu Seller Profile</b>\n\n"+
+			"🏷 Handle: <b>%s</b>\n"+
 			"🆔 ID: <code>%s</code>\n\n"+
-			"🛡 <b>Статус Доверия:</b>\n"+
+			"🛡 <b>Trust Status:</b>\n"+
 			"%s\n"+
-			"💳 Верификация: <i>%s</i>\n\n"+
-			"📅 Срок на платформе: <b>%s</b>\n"+
-			"⚧ Пол: <i>%s</i>\n\n"+
-			"🔗 <a href=\"https://www.goofish.com/user?id=%s\">Открыть профиль на Xianyu</a>",
+			"💳 Verification: <i>%s</i>\n\n"+
+			"📅 Account Age: <b>%s</b>\n"+
+			"⚧ Gender: <i>%s</i>\n\n"+
+			"🔗 <a href=\"https://www.goofish.com/user?id=%s\">Open Profile on Xianyu</a>",
 		prof.Nickname, prof.UserID, zhimaBadge, authBadge, registerDaysTrans, genderBadge, prof.UserID,
 	)
 

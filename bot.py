@@ -46,20 +46,20 @@ dp.include_router(settings_router)
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
     if not is_authorized(message.from_user.id):
-        await message.answer("❌ У вас нет доступа к этому боту.")
+        await message.answer("❌ Access denied.")
         return
 
     welcome_text = (
-        "🐟 *Привет! Добро пожаловать в Xianyu/Goofish Search & Monitor Bot!*\n\n"
-        "Я помогу вам искать товары на китайской барахолке Goofish и получать моментальные оповещения о новых предложениях.\n\n"
-        "📖 *Основные Команды:*\n"
-        "• `/search <запрос>` - Быстрый интерактивный поиск товаров\n"
-        "• `/monitor <запрос> [<мин_цена> <макс_цена>]` - Начать следить за новыми лотами\n"
-        "• `/monitors` - Показать активные задачи мониторинга\n"
-        "• `/unmonitor <ID>` - Удалить задачу мониторинга\n"
-        "• `/setcookies` - Обновить H5 куки из Antidetect браузера\n"
-        "• `/status` - Проверить статус токенов и прокси\n\n"
-        "ℹ️ Для вызова справки используйте: /help"
+        "🐟 *Welcome to Xianyu / Goofish Search & Monitor Bot!*\n\n"
+        "Automated assistant for searching Goofish / Xianyu marketplace and receiving real-time alerts.\n\n"
+        "📖 *Core Commands:*\n"
+        "• `/search <query>` - Interactive product search\n"
+        "• `/monitor <query> [<min_price> <max_price>]` - Monitor new listings\n"
+        "• `/monitors` - List active monitor tasks\n"
+        "• `/unmonitor <ID>` - Remove monitor task\n"
+        "• `/setcookies` - Update session cookies\n"
+        "• `/status` - Check proxy and session token status\n\n"
+        "ℹ️ Use /help for detailed instructions"
     )
     await message.answer(welcome_text, parse_mode="Markdown")
 
@@ -69,13 +69,13 @@ async def cmd_help(message: Message):
         return
 
     help_text = (
-        "📖 *Справка по использованию бота*\n\n"
-        "🔍 *Как искать товары?*\n"
-        "Используйте команду `/search rickowens`. Бот вернет карточки товаров с фотографиями, ценами в юанях и прямой ссылкой на покупку. Кнопки позволят перелистывать страницы или мгновенно отфильтровать товары по цене.\n\n"
-        "🔔 *Как работает мониторинг?*\n"
-        "Вы можете подписаться на отслеживание новых товаров. Бот опрашивает Goofish раз в 5 минут, сравнивает результаты и присылает фото-уведомление, если на рынке появился новый лот. Пример: `/monitor rickowens 5000 15000` (следить за Rick Owens от ¥5000 до ¥15000).\n\n"
-        "🍪 *Что делать, если запросы не работают?*\n"
-        "Goofish H5 API защищен подписью MTOP. Если сессия истекает, получите новые cookies в Antidetect браузере на сайте goofish.com и обновите их в боте с помощью `/setcookies`."
+        "📖 *Help & Usage Guide*\n\n"
+        "🔍 *How to Search Listings?*\n"
+        "Use `/search <query>`. The bot returns structured item cards with images and action buttons.\n\n"
+        "🔔 *How Does Monitoring Work?*\n"
+        "Subscribe to keywords. Background worker polls Goofish and notifies on new items.\n\n"
+        "🍪 *Session Authentication:*\n"
+        "Goofish H5 API requires MTOP signatures. Use /setcookies to renew session tokens.\n\n"
     )
     await message.answer(help_text, parse_mode="Markdown")
 

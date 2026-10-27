@@ -38,17 +38,17 @@ func (item *GoofishItem) FreshnessLabel() string {
 	}
 	age := *item.AgeMinutes
 	if age < 10 {
-		return "🔥 Только что"
+		return "🔥 Just now"
 	}
 	if age < 60 {
-		return fmt.Sprintf("🟢 %d мин. назад", age)
+		return fmt.Sprintf("🟢 %d min ago", age)
 	}
 	if age < 1440 {
 		hours := age / 60
-		return fmt.Sprintf("🟡 %d ч. назад", hours)
+		return fmt.Sprintf("🟡 %d hr ago", hours)
 	}
 	days := age / 1440
-	return fmt.Sprintf("⚪️ %d д. назад", days)
+	return fmt.Sprintf("⚪️ %d d ago", days)
 }
 
 // ToMap converts GoofishItem to a standard map suitable for JSON outputs.

@@ -59,14 +59,14 @@ func (h *APIHandler) Root(c *gin.Context) {
 	</head>
 	<body>
 		<h1>🐟 Xianyu Bot API (Go)</h1>
-		<p>REST API для тестирования поиска, парсинга и перевода товаров с Goofish.</p>
-		<p>📖 Перейдите к эндпоинтам ниже для проверки состояния системы.</p>
-		<h2>Эндпоинты</h2>
-		<div class="endpoint"><span class="method">GET</span> <code>/health</code> — Проверка статуса системы и конфигурации</div>
-		<div class="endpoint"><span class="method">GET</span> <code>/search?query=rick+owens&page=1</code> — Поиск товаров на Goofish</div>
-		<div class="endpoint"><span class="method">GET</span> <code>/search/translated?query=maison+margiela</code> — Поиск с переводом DeepL</div>
-		<div class="endpoint"><span class="method">GET</span> <code>/cookies/status</code> — Статус активных куки сессии</div>
-		<div class="endpoint"><span class="method">GET</span> <code>/translate?text=马丁靴&target=RU</code> — Тест перевода через DeepL</div>
+		<p>REST API for querying, parsing, and normalizing listings from Goofish.</p>
+		<p>📖 Review endpoints below for system health and queries.</p>
+		<h2>Endpoints</h2>
+		<div class="endpoint"><span class="method">GET</span> <code>/health</code> — System health check and configuration status</div>
+		<div class="endpoint"><span class="method">GET</span> <code>/search?query=rick+owens&page=1</code> — Search Goofish listings (raw normalized)</div>
+		<div class="endpoint"><span class="method">GET</span> <code>/search/translated?query=maison+margiela</code> — Search with DeepL translation pipeline</div>
+		<div class="endpoint"><span class="method">GET</span> <code>/cookies/status</code> — Active session cookies status</div>
+		<div class="endpoint"><span class="method">GET</span> <code>/translate?text=马丁靴&target=EN</code> — Direct DeepL translation probe</div>
 	</body>
 	</html>
 	`
@@ -139,7 +139,7 @@ func (h *APIHandler) Search(c *gin.Context) {
 
 	activeCookies, err := h.db.GetCookies(config.Settings.XianyuCookies)
 	if err != nil || activeCookies == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"detail": "Нет активных куки. Сначала установи cookies в боте."})
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "No active session cookies found. Please supply session cookies via /setcookies."})
 		return
 	}
 
@@ -207,7 +207,7 @@ func (h *APIHandler) SearchTranslated(c *gin.Context) {
 
 	activeCookies, err := h.db.GetCookies(config.Settings.XianyuCookies)
 	if err != nil || activeCookies == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"detail": "Нет активных куки."})
+		c.JSON(http.StatusUnauthorized, gin.H{"detail": "No active session cookies."})
 		return
 	}
 
@@ -273,7 +273,7 @@ func (h *APIHandler) SearchTranslated(c *gin.Context) {
 		item.AreaTranslated = trans.areaTrans
 
 		item.TelegramCaption = fmt.Sprintf(
-			"🐟 [%d/%d] %s...\n\n💰 Цена: %s\n📍 Регион: %s\n👤 Продавец: %s\n🔗 %s",
+			"🐟 [%d/%d] %s...\n\n💰 Price: %s\n📍 Region: %s\n👤 Seller: %s\n🔗 %s",
 			idx+1, len(items), trans.titleTrans, item.Price, trans.areaTrans, item.UserNickname, item.ShareURL(),
 		)
 
@@ -301,7 +301,7 @@ func (h *APIHandler) CookiesStatus(c *gin.Context) {
 	if cookies == "" {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "empty",
-			"message": "Куки не установлены. Используй /setcookies в боте.",
+			"message": "Cookies not set. Use /setcookies to configure session.",
 		})
 		return
 	}

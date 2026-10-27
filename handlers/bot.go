@@ -50,7 +50,7 @@ func (h *BotHandler) handleMessage(msg *tgbotapi.Message) {
 
 	// 1. Verify authorization
 	if !config.Settings.IsUserAllowed(userID) {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ У вас нет доступа к этому боту.")
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ Access denied.")
 		h.bot.Send(reply)
 		return
 	}
@@ -78,7 +78,7 @@ func (h *BotHandler) handleMessage(msg *tgbotapi.Message) {
 		case "status":
 			h.cmdStatus(msg)
 		default:
-			reply := tgbotapi.NewMessage(msg.Chat.ID, "❓ Неизвестная команда. Введите /help для списка доступных команд.")
+			reply := tgbotapi.NewMessage(msg.Chat.ID, "❓ Unknown command. Use /help for available commands.")
 			h.bot.Send(reply)
 		}
 		return
@@ -97,23 +97,23 @@ func (h *BotHandler) handleMessage(msg *tgbotapi.Message) {
 	}
 
 	// Default fallback response
-	reply := tgbotapi.NewMessage(msg.Chat.ID, "💡 Введите /search <запрос> для поиска товаров или /help для справки.")
+	reply := tgbotapi.NewMessage(msg.Chat.ID, "💡 Use /search <query> to search or /help for instructions.")
 	h.bot.Send(reply)
 }
 
 // --- Commands Handlers ---
 
 func (h *BotHandler) cmdStart(msg *tgbotapi.Message) {
-	welcome := "🐟 <b>Привет! Добро пожаловать в Xianyu/Goofish Search & Monitor Bot!</b>\n\n" +
-		"Я помогу вам искать товары на китайской барахолке Goofish и получать моментальные оповещения о новых предложениях.\n\n" +
-		"📖 <b>Основные Команды:</b>\n" +
-		"• `/search <запрос>` - Быстрый интерактивный поиск товаров\n" +
-		"• `/monitor <запрос> [<мин_цена> <макс_цена>]` - Начать следить за новыми лотами\n" +
-		"• `/monitors` - Показать активные задачи мониторинга\n" +
-		"• `/unmonitor <ID>` - Удалить задачу мониторинга\n" +
-		"• `/setcookies` - Обновить H5 куки из Antidetect браузера\n" +
-		"• `/status` - Проверить статус токенов и прокси\n\n" +
-		"ℹ️ Для вызова справки используйте: /help"
+	welcome := "🐟 <b>Welcome to Xianyu / Goofish Search & Monitor Bot!</b>\n\n" +
+		"Automated assistant for searching Goofish / Xianyu marketplace and receiving real-time alerts.\n\n" +
+		"📖 <b>Core Commands:</b>\n" +
+		"• `/search <query>` - Interactive product search\n" +
+		"• `/monitor <query> [<min_price> <max_price>]` - Track new listings\n" +
+		"• `/monitors` - List active monitor tasks\n" +
+		"• `/unmonitor <ID>` - Remove monitor task\n" +
+		"• `/setcookies` - Update session cookies\n" +
+		"• `/status` - Check proxy and session token status\n\n" +
+		"ℹ️ Use /help for instructions"
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, welcome)
 	reply.ParseMode = "HTML"
@@ -121,13 +121,13 @@ func (h *BotHandler) cmdStart(msg *tgbotapi.Message) {
 }
 
 func (h *BotHandler) cmdHelp(msg *tgbotapi.Message) {
-	help := "📖 <b>Справка по использованию бота</b>\n\n" +
-		"🔍 <b>Как искать товары?</b>\n" +
-		"Используйте команду `/search rickowens`. Бот вернет карточки товаров с фотографиями, ценами в юанях и прямой ссылкой на покупку. Кнопки позволят перелистывать страницы или мгновенно отфильтровать товары по цене.\n\n" +
-		"🔔 <b>Как работает мониторинг?</b>\n" +
-		"Вы можете подписаться на отслеживание новых товаров. Бот опрашивает Goofish раз в 5 минут, сравнивает результаты и присылает фото-уведомление, если на рынке появился новый лот. Пример: `/monitor rickowens 5000 15000` (следить за Rick Owens от ¥5000 до ¥15000).\n\n" +
-		"🍪 <b>Что делать, если запросы не работают?</b>\n" +
-		"Goofish H5 API защищен подписью MTOP. Если сессия истекает, получите новые cookies в Antidetect браузере на сайте goofish.com и обновите их в боте с помощью `/setcookies`."
+	help := "📖 <b>Help & Usage Guide</b>\n\n" +
+		"🔍 <b>How to Search?</b>\n" +
+		"Use `/search <query>`. The bot returns structured item cards with images and action buttons.\n\n" +
+		"🔔 <b>How Does Monitoring Work?</b>\n" +
+		"Subscribe to keywords. Background worker polls Goofish and notifies on new items.\n\n" +
+		"🍪 <b>Session Authentication:</b>\n" +
+		"Goofish H5 API requires MTOP signatures. Use /setcookies to renew session tokens.\n\n"
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, help)
 	reply.ParseMode = "HTML"
@@ -141,7 +141,7 @@ func (h *BotHandler) cmdSearchPrompt(msg *tgbotapi.Message) {
 		return
 	}
 
-	reply := tgbotapi.NewMessage(msg.Chat.ID, "🔍 Введите поисковый запрос (например: <b>rick owens</b>):")
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "🔍 Enter search query (e.g. <code>/search rick owens</code>)")
 	reply.ParseMode = "HTML"
 	h.bot.Send(reply)
 	h.states.Store(msg.From.ID, "waiting_for_query")
@@ -151,7 +151,7 @@ func (h *BotHandler) processSearchQuery(msg *tgbotapi.Message) {
 	h.states.Delete(msg.From.ID)
 	query := strings.TrimSpace(msg.Text)
 	if query == "" {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ Пустой запрос. Попробуйте еще раз с /search.")
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ Empty query. Please provide search keywords.")
 		h.bot.Send(reply)
 		return
 	}
@@ -161,10 +161,10 @@ func (h *BotHandler) processSearchQuery(msg *tgbotapi.Message) {
 func (h *BotHandler) cmdAddMonitor(msg *tgbotapi.Message) {
 	args := strings.TrimSpace(msg.CommandArguments())
 	if args == "" {
-		help := "⚠️ Некорректный синтаксис.\n\n" +
-			"Примеры:\n" +
-			"• `/monitor rickowens` - следить за всеми новыми товарами\n" +
-			"• `/monitor rickowens 5000 15000` - следить в диапазоне цен от ¥5000 до ¥15000"
+		help := "⚠️ Invalid syntax.\n\n" +
+			"Examples:\n" +
+			"• `/monitor rickowens` - track all new listings\n" +
+			"• `/monitor rickowens 5000 15000` - track in price range ¥5000-¥15000"
 		reply := tgbotapi.NewMessage(msg.Chat.ID, help)
 		reply.ParseMode = "Markdown"
 		h.bot.Send(reply)
@@ -194,22 +194,22 @@ func (h *BotHandler) cmdAddMonitor(msg *tgbotapi.Message) {
 
 	monitorID, err := h.db.AddMonitor(msg.From.ID, keyword, priceMin, priceMax, 300)
 	if err != nil {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ Ошибка при создании мониторинга: "+err.Error())
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ Error creating monitor task: "+err.Error())
 		h.bot.Send(reply)
 		return
 	}
 
-	priceFilter := "отсутствует"
+	priceFilter := "None"
 	if priceMin != nil || priceMax != nil {
 		priceFilter = fmt.Sprintf("¥%d-¥%d", *priceMin, *priceMax)
 	}
 
 	response := fmt.Sprintf(
-		"✅ <b>Мониторинг успешно запущен!</b>\n\n"+
-			"🆔 ID Задачи: <code>%d</code>\n"+
-			"🔍 Ключевое слово: <b>%s</b>\n"+
-			"💰 Фильтр цен: %s\n"+
-			"⏱ Интервал проверки: <code>5 минут</code>",
+		"✅ <b>Monitoring task started!</b>\n\n"+
+			"🆔 Task ID: <code>%d</code>\n"+
+			"🔍 Keyword: <b>%s</b>\n"+
+			"💰 Price Filter: %s\n"+
+			"⏱ Polling Interval: <code>5 minutes</code>",
 		monitorID, keyword, priceFilter,
 	)
 
@@ -221,22 +221,22 @@ func (h *BotHandler) cmdAddMonitor(msg *tgbotapi.Message) {
 func (h *BotHandler) cmdListMonitors(msg *tgbotapi.Message) {
 	monitors, err := h.db.GetUserMonitors(msg.From.ID)
 	if err != nil {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ Не удалось прочитать список мониторов: "+err.Error())
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ Failed to read monitor tasks: "+err.Error())
 		h.bot.Send(reply)
 		return
 	}
 
 	if len(monitors) == 0 {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "🔍 У вас нет активных задач мониторинга. Запустите одну с помощью /monitor")
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "🔍 No active monitor tasks. Create one using /monitor.")
 		h.bot.Send(reply)
 		return
 	}
 
 	var sb strings.Builder
-	sb.WriteString("📋 <b>Список ваших активных задач мониторинга:</b>\n\n")
+	sb.WriteString("📋 <b>Active Monitor Tasks:</b>\n\n")
 
 	for _, mon := range monitors {
-		priceStr := "Любая"
+		priceStr := "Any"
 		if mon.PriceMin != nil || mon.PriceMax != nil {
 			pMin := 0
 			pMax := 0
@@ -251,8 +251,8 @@ func (h *BotHandler) cmdListMonitors(msg *tgbotapi.Message) {
 
 		sb.WriteString(fmt.Sprintf(
 			"🔸 <b>ID %d</b>: <b>%s</b>\n"+
-				"   💰 Цена: <code>%s</code> | ⏱ Интервал: <code>5 мин</code> | Статус: <code>Активен</code>\n"+
-				"   ❌ Удалить: `/unmonitor %d`\n\n",
+				"   💰 Price: <code>%s</code> | ⏱ Interval: <code>5 min</code> | Status: <code>Active</code>\n"+
+				"   ❌ Remove: `/unmonitor %d`\n\n",
 			mon.ID, html.EscapeString(mon.Keyword), priceStr, mon.ID,
 		))
 	}
@@ -265,41 +265,41 @@ func (h *BotHandler) cmdListMonitors(msg *tgbotapi.Message) {
 func (h *BotHandler) cmdRemoveMonitor(msg *tgbotapi.Message) {
 	args := strings.Fields(msg.CommandArguments())
 	if len(args) < 1 {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ Укажите ID задачи. Пример: `/unmonitor 1`")
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ Specify task ID. Example: `/unmonitor 1`")
 		h.bot.Send(reply)
 		return
 	}
 
 	monitorID, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ ID должен быть числом.")
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ Task ID must be an integer.")
 		h.bot.Send(reply)
 		return
 	}
 
 	success, err := h.db.DeleteMonitor(monitorID, msg.From.ID)
 	if err != nil {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ Ошибка при удалении монитора: "+err.Error())
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ Error removing monitor: "+err.Error())
 		h.bot.Send(reply)
 		return
 	}
 
 	if success {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("✅ Задача мониторинга <b>ID %d</b> успешно удалена.", monitorID))
+		reply := tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("✅ Monitor task <b>ID %d</b> successfully removed.", monitorID))
 		reply.ParseMode = "HTML"
 		h.bot.Send(reply)
 	} else {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("❌ Задача с <b>ID %d</b> не найдена или принадлежит не вам.", monitorID))
+		reply := tgbotapi.NewMessage(msg.Chat.ID, fmt.Sprintf("❌ Task with <b>ID %d</b> not found.", monitorID))
 		reply.ParseMode = "HTML"
 		h.bot.Send(reply)
 	}
 }
 
 func (h *BotHandler) cmdSetCookiesPrompt(msg *tgbotapi.Message) {
-	welcome := "🍪 <b>Обновление Cookies Goofish</b>\n\n" +
-		"Отправьте мне всю строку Cookies (из Antidetect браузера или DevTools).\n" +
-		"Обязательно должны присутствовать <code>cookie2</code> и <code>_m_h5_tk</code>.\n\n" +
-		"Отправьте /cancel для отмены."
+	welcome := "🍪 <b>Update Goofish Session Cookies</b>\n\n" +
+		"Send raw session Cookie header (from anti-detect browser or DevTools).\n" +
+		"Must include <code>cookie2</code> and <code>_m_h5_tk</code>.\n\n" +
+		"Send /cancel to abort."
 
 	reply := tgbotapi.NewMessage(msg.Chat.ID, welcome)
 	reply.ParseMode = "HTML"
@@ -309,7 +309,7 @@ func (h *BotHandler) cmdSetCookiesPrompt(msg *tgbotapi.Message) {
 
 func (h *BotHandler) cmdCancel(msg *tgbotapi.Message) {
 	h.states.Delete(msg.From.ID)
-	reply := tgbotapi.NewMessage(msg.Chat.ID, "🔄 Действие отменено.")
+	reply := tgbotapi.NewMessage(msg.Chat.ID, "🔄 Action cancelled.")
 	h.bot.Send(reply)
 }
 
@@ -318,13 +318,13 @@ func (h *BotHandler) processCookiesInput(msg *tgbotapi.Message) {
 	cookieStr := strings.TrimSpace(msg.Text)
 
 	if cookieStr == "" {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ Пустая строка. Попробуйте еще раз с /setcookies.")
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ Empty input. Please provide cookies string.")
 		h.bot.Send(reply)
 		return
 	}
 
 	if !strings.Contains(cookieStr, "_m_h5_tk") {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ В строке Cookies отсутствует обязательный параметр <code>_m_h5_tk</code>. Проверьте копирование и попробуйте еще раз.")
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "⚠️ Missing required parameters `_m_h5_tk` or `cookie2`.")
 		reply.ParseMode = "HTML"
 		h.bot.Send(reply)
 		return
@@ -332,12 +332,12 @@ func (h *BotHandler) processCookiesInput(msg *tgbotapi.Message) {
 
 	// Save to DB
 	if err := h.db.SaveCookies(cookieStr); err != nil {
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ Ошибка сохранения Cookies: "+err.Error())
+		reply := tgbotapi.NewMessage(msg.Chat.ID, "❌ Error saving cookies: "+err.Error())
 		h.bot.Send(reply)
 		return
 	}
 
-	statusMsg := tgbotapi.NewMessage(msg.Chat.ID, "💾 Cookies сохранены в базу данных. Проверяю соединение с API...")
+	statusMsg := tgbotapi.NewMessage(msg.Chat.ID, "💾 Cookies saved to SQLite. Validating connection...")
 	statusSent, _ := h.bot.Send(statusMsg)
 
 	// Validate cookies by running a test search
@@ -349,13 +349,13 @@ func (h *BotHandler) processCookiesInput(msg *tgbotapi.Message) {
 		testWord := "test"
 		rawRes, err := client.Search(testWord, 1, nil, nil, 1, false)
 		if err != nil {
-			edit := tgbotapi.NewEditMessageText(msg.Chat.ID, statusSent.MessageID, "⚠️ <b>Cookies сохранены, но при проверке произошла ошибка:</b> <code>"+html.EscapeString(err.Error())+"</code>.\nУбедитесь, что прокси работает корректно.")
+			edit := tgbotapi.NewEditMessageText(msg.Chat.ID, statusSent.MessageID, "⚠️ <b>Cookies saved, but verification failed:</b> <code>"+html.EscapeString(err.Error())+"</code>.\nEnsure proxy connection is operational.")
 			edit.ParseMode = "HTML"
 			h.bot.Send(edit)
 			return
 		}
 
-		retMsg := "Неизвестно"
+		retMsg := "Unknown"
 		if retList, ok := rawRes["ret"].([]interface{}); ok && len(retList) > 0 {
 			if s, ok := retList[0].(string); ok {
 				retMsg = s
@@ -363,11 +363,11 @@ func (h *BotHandler) processCookiesInput(msg *tgbotapi.Message) {
 		}
 
 		if strings.Contains(retMsg, "SUCCESS") {
-			edit := tgbotapi.NewEditMessageText(msg.Chat.ID, statusSent.MessageID, "✅ <b>Cookies успешно сохранены и проверены!</b> Соединение с Goofish API работает.")
+			edit := tgbotapi.NewEditMessageText(msg.Chat.ID, statusSent.MessageID, "✅ <b>Cookies verified successfully!</b> API session is active and functional.")
 			edit.ParseMode = "HTML"
 			h.bot.Send(edit)
 		} else {
-			edit := tgbotapi.NewEditMessageText(msg.Chat.ID, statusSent.MessageID, "⚠️ <b>Cookies сохранены, но тест API вернул ошибку:</b> <code>"+html.EscapeString(retMsg)+"</code>. Возможно, куки истекли или требуется проверка.")
+			edit := tgbotapi.NewEditMessageText(msg.Chat.ID, statusSent.MessageID, "⚠️ <b>Cookies saved, but API test returned error:</b> <code>"+html.EscapeString(retMsg)+"</code>. Cookies may have expired or verification is required.")
 			edit.ParseMode = "HTML"
 			h.bot.Send(edit)
 		}
@@ -378,24 +378,24 @@ func (h *BotHandler) cmdStatus(msg *tgbotapi.Message) {
 	cookies, _ := h.db.GetCookies(config.Settings.XianyuCookies)
 	client := goofish.NewSearchClient(cookies, config.Settings.ProxyURL, nil)
 
-	hasToken := "❌ Нет"
-	tokenVal := "отсутствует"
+	hasToken := "❌ No"
+	tokenVal := "None"
 	if tok := client.GetToken(); tok != "" {
-		hasToken = "✅ Да"
+		hasToken = "✅ Yes"
 		tokenVal = tok
 	}
 
-	proxyStatus := "❌ Отключен"
+	proxyStatus := "❌ Disabled"
 	if config.Settings.ProxyURL != "" {
 		proxyStatus = fmt.Sprintf("<code>%s</code>", html.EscapeString(config.Settings.ProxyURL))
 	}
 
 	response := fmt.Sprintf(
-		"🖥 <b>Статус Системы Xianyu Bot</b>\n\n"+
-			"📡 Прокси: %s\n"+
-			"🍪 Наличие H5 токена: %s\n"+
-			"🔑 Токен: <code>%s</code>\n\n"+
-			"Для обновления Cookies отправьте: /setcookies",
+		"🖥 <b>Xianyu Bot System Status</b>\n\n"+
+			"📡 Proxy: %s\n"+
+			"🍪 H5 Token Status: %s\n"+
+			"🔑 Token: <code>%s</code>\n\n"+
+			"To update cookies, send: /setcookies",
 		proxyStatus, hasToken, tokenVal,
 	)
 
@@ -407,13 +407,13 @@ func (h *BotHandler) cmdStatus(msg *tgbotapi.Message) {
 // --- Search Action Engine ---
 
 func (h *BotHandler) executeSearch(chatID int64, query string, page int, priceMin, priceMax *int) {
-	statusMsg := tgbotapi.NewMessage(chatID, "⏳ Выполняю поиск на Goofish...")
+	statusMsg := tgbotapi.NewMessage(chatID, "⏳ Searching Goofish...")
 	statusSent, _ := h.bot.Send(statusMsg)
 
 	go func() {
 		activeCookies, err := h.db.GetCookies(config.Settings.XianyuCookies)
 		if err != nil {
-			h.editStatusMessage(chatID, statusSent.MessageID, "❌ Ошибка базы данных: "+err.Error())
+			h.editStatusMessage(chatID, statusSent.MessageID, "❌ Database error: "+err.Error())
 			return
 		}
 
@@ -427,13 +427,13 @@ func (h *BotHandler) executeSearch(chatID int64, query string, page int, priceMi
 		expandedQuery := services.ExpandQuery(query)
 		rawResp, err := client.Search(expandedQuery, page, priceMin, priceMax, 3, true)
 		if err != nil {
-			h.editStatusMessage(chatID, statusSent.MessageID, "❌ Ошибка поиска: "+html.EscapeString(err.Error()))
+			h.editStatusMessage(chatID, statusSent.MessageID, "❌ Search error: "+html.EscapeString(err.Error()))
 			return
 		}
 
 		items := goofish.ParseSearchResponse(rawResp)
 		if len(items) == 0 {
-			h.editStatusMessage(chatID, statusSent.MessageID, "🔍 Ничего не найдено. Проверьте запрос, ценовой фильтр или обновите cookies через /setcookies.")
+		h.editStatusMessage(chatID, statusSent.MessageID, "🔍 No listings found. Verify query or refresh cookies via /setcookies.")
 			return
 		}
 
@@ -482,11 +482,11 @@ func (h *BotHandler) executeSearch(chatID int64, query string, page int, priceMi
 			}
 
 			escapedPrice := html.EscapeString(item.Price)
-			escapedArea := "Не указан"
+			escapedArea := "Unspecified"
 			if trans.areaTrans != "" {
 				escapedArea = html.EscapeString(trans.areaTrans)
 			}
-			escapedNickname := "Не указан"
+			escapedNickname := "Unspecified"
 			if item.UserNickname != "" {
 				escapedNickname = html.EscapeString(item.UserNickname)
 			}
@@ -495,10 +495,10 @@ func (h *BotHandler) executeSearch(chatID int64, query string, page int, priceMi
 			// Collect badges
 			var badges []string
 			if item.IsVerified {
-				badges = append(badges, "✅ Проверен платформой")
+				badges = append(badges, "✅ Verified Seller")
 			}
 			if item.IsNewItem {
-				badges = append(badges, "🆕 Новый")
+				badges = append(badges, "🆕 Brand New")
 			}
 			if fLabel := item.FreshnessLabel(); fLabel != "" {
 				badges = append(badges, fLabel)
@@ -507,9 +507,9 @@ func (h *BotHandler) executeSearch(chatID int64, query string, page int, priceMi
 
 			caption := fmt.Sprintf(
 				"🐟 <b>[%d/%d] %s</b>\n\n"+
-					"💰 Цена: <code>%s</code>\n"+
-					"📍 Регион: %s\n"+
-					"👤 Продавец: %s\n",
+					"💰 Price: <code>%s</code>\n"+
+					"📍 Region: %s\n"+
+					"👤 Seller: %s\n",
 				idx+1, len(items), escapedTitle, escapedPrice, escapedArea, escapedNickname,
 			)
 
@@ -519,7 +519,7 @@ func (h *BotHandler) executeSearch(chatID int64, query string, page int, priceMi
 			if badgeLine != "" {
 				caption += fmt.Sprintf("%s\n", badgeLine)
 			}
-			caption += fmt.Sprintf("\n<a href=\"%s\">🔗 Открыть на Xianyu</a>", item.ShareURL())
+			caption += fmt.Sprintf("\n<a href=\"%s\">🔗 Open on Xianyu</a>", item.ShareURL())
 
 			picURL := item.PicURL
 			if picURL == "" {
@@ -533,7 +533,7 @@ func (h *BotHandler) executeSearch(chatID int64, query string, page int, priceMi
 			if item.UserID != "" {
 				photoCard.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 					tgbotapi.NewInlineKeyboardRow(
-						tgbotapi.NewInlineKeyboardButtonData("👤 Продавец", fmt.Sprintf("seller:%s", item.UserID)),
+						tgbotapi.NewInlineKeyboardButtonData("👤 Seller", fmt.Sprintf("seller:%s", item.UserID)),
 					),
 				)
 			}
@@ -545,7 +545,7 @@ func (h *BotHandler) executeSearch(chatID int64, query string, page int, priceMi
 				if item.UserID != "" {
 					txt.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 						tgbotapi.NewInlineKeyboardRow(
-							tgbotapi.NewInlineKeyboardButtonData("👤 Продавец", fmt.Sprintf("seller:%s", item.UserID)),
+							tgbotapi.NewInlineKeyboardButtonData("👤 Seller", fmt.Sprintf("seller:%s", item.UserID)),
 						),
 					)
 				}
@@ -566,7 +566,7 @@ func (h *BotHandler) executeSearch(chatID int64, query string, page int, priceMi
 		keyboard := h.buildSearchKeyboard(query, page, pMinStr, pMaxStr)
 		escapedQuery := html.EscapeString(query)
 
-		ctrlMsg := tgbotapi.NewMessage(chatID, fmt.Sprintf("👇 Управление результатами по запросу <b>'%s'</b> (стр. %d):", escapedQuery, page))
+		ctrlMsg := tgbotapi.NewMessage(chatID, fmt.Sprintf("👇 Manage results for query <b>'%s'</b> (page %d):", escapedQuery, page))
 		ctrlMsg.ReplyMarkup = keyboard
 		ctrlMsg.ParseMode = "HTML"
 		h.bot.Send(ctrlMsg)
@@ -583,14 +583,14 @@ func (h *BotHandler) editStatusMessage(chatID int64, messageID int, text string)
 
 func (h *BotHandler) buildSearchKeyboard(query string, page int, priceMin, priceMax string) tgbotapi.InlineKeyboardMarkup {
 	row1 := []tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardButtonData("◀️ Назад", fmt.Sprintf("page:%d:%s:%s:%s", page-1, query, priceMin, priceMax)),
-		tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("📄 Стр. %d", page), "noop"),
-		tgbotapi.NewInlineKeyboardButtonData("Вперед ▶️", fmt.Sprintf("page:%d:%s:%s:%s", page+1, query, priceMin, priceMax)),
+		tgbotapi.NewInlineKeyboardButtonData("◀️ Prev", fmt.Sprintf("page:%d:%s:%s:%s", page-1, query, priceMin, priceMax)),
+		tgbotapi.NewInlineKeyboardButtonData(fmt.Sprintf("📄 Page %d", page), "noop"),
+		tgbotapi.NewInlineKeyboardButtonData("Next ▶️", fmt.Sprintf("page:%d:%s:%s:%s", page+1, query, priceMin, priceMax)),
 	}
 
 	row2 := []tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardButtonData("💰 Любая цена", fmt.Sprintf("price:%s::", query)),
-		tgbotapi.NewInlineKeyboardButtonData("💰 до ¥1000", fmt.Sprintf("price:%s::1000", query)),
+		tgbotapi.NewInlineKeyboardButtonData("💰 Any Price", fmt.Sprintf("price:%s::", query)),
+		tgbotapi.NewInlineKeyboardButtonData("💰 < ¥1000", fmt.Sprintf("price:%s::1000", query)),
 		tgbotapi.NewInlineKeyboardButtonData("💰 ¥1000-5000", fmt.Sprintf("price:%s:1000:5000", query)),
 	}
 
@@ -600,7 +600,7 @@ func (h *BotHandler) buildSearchKeyboard(query string, page int, priceMin, price
 	}
 
 	row4 := []tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardButtonData("🔔 Добавить в мониторинг", fmt.Sprintf("addmon:%s:%s:%s", query, priceMin, priceMax)),
+		tgbotapi.NewInlineKeyboardButtonData("🔔 Track in Monitor", fmt.Sprintf("addmon:%s:%s:%s", query, priceMin, priceMax)),
 	}
 
 	return tgbotapi.NewInlineKeyboardMarkup(row1, row2, row3, row4)
@@ -611,7 +611,7 @@ func (h *BotHandler) handleCallbackQuery(cb *tgbotapi.CallbackQuery) {
 
 	// 1. Verify authorization
 	if !config.Settings.IsUserAllowed(userID) {
-		h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, "❌ У вас нет доступа."))
+		h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, "❌ Access denied."))
 		return
 	}
 
@@ -642,7 +642,7 @@ func (h *BotHandler) handleCallbackQuery(cb *tgbotapi.CallbackQuery) {
 		}
 
 		if pageNum < 1 {
-			h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, "⚠️ Вы уже на первой странице."))
+			h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, "⚠️ Already on first page."))
 			return
 		}
 
@@ -673,7 +673,7 @@ func (h *BotHandler) handleCallbackQuery(cb *tgbotapi.CallbackQuery) {
 
 		h.executeSearch(cb.Message.Chat.ID, query, 1, priceMin, priceMax)
 
-		priceMsg := "Любая"
+		priceMsg := "Any"
 		if priceMin != nil || priceMax != nil {
 			minVal := 0
 			maxVal := 0
@@ -685,7 +685,7 @@ func (h *BotHandler) handleCallbackQuery(cb *tgbotapi.CallbackQuery) {
 			}
 			priceMsg = fmt.Sprintf("%d-%d", minVal, maxVal)
 		}
-		h.bot.Send(tgbotapi.NewCallback(cb.ID, fmt.Sprintf("Применен фильтр цен: %s", priceMsg)))
+		h.bot.Send(tgbotapi.NewCallback(cb.ID, fmt.Sprintf("Applied price filter: %s", priceMsg)))
 
 	case "addmon":
 		// Syntax: addmon:query:priceMin:priceMax
@@ -703,26 +703,26 @@ func (h *BotHandler) handleCallbackQuery(cb *tgbotapi.CallbackQuery) {
 
 		monitorID, err := h.db.AddMonitor(userID, query, priceMin, priceMax, 300)
 		if err != nil {
-			h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, "❌ Ошибка создания мониторинга: "+err.Error()))
+			h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, "❌ Error creating monitor: "+err.Error()))
 			return
 		}
 
-		h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, fmt.Sprintf("🔔 Задача добавлена в мониторинг! ID: %d", monitorID)))
+		h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, fmt.Sprintf("🔔 Task added to monitoring! ID: %d", monitorID)))
 
 	case "seller":
 		// Syntax: seller:userID
 		if len(parts) < 2 {
-			h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, "⚠️ Неверный ID продавца."))
+			h.bot.Send(tgbotapi.NewCallbackWithAlert(cb.ID, "⚠️ Invalid seller ID."))
 			return
 		}
 		sellerID := parts[1]
 
-		h.bot.Send(tgbotapi.NewCallback(cb.ID, "⏳ Загружаю профиль продавца..."))
+		h.bot.Send(tgbotapi.NewCallback(cb.ID, "⏳ Loading seller profile..."))
 
 		go func() {
 			activeCookies, err := h.db.GetCookies(config.Settings.XianyuCookies)
 			if err != nil {
-				reply := tgbotapi.NewMessage(cb.Message.Chat.ID, "❌ Ошибка базы данных: "+err.Error())
+				reply := tgbotapi.NewMessage(cb.Message.Chat.ID, "❌ Database error: "+err.Error())
 				h.bot.Send(reply)
 				return
 			}
@@ -736,7 +736,7 @@ func (h *BotHandler) handleCallbackQuery(cb *tgbotapi.CallbackQuery) {
 
 			card, err := services.GetSellerProfileCard(client, sellerID)
 			if err != nil {
-				reply := tgbotapi.NewMessage(cb.Message.Chat.ID, "❌ Не удалось получить профиль продавца: "+err.Error())
+				reply := tgbotapi.NewMessage(cb.Message.Chat.ID, "❌ Failed to fetch seller profile: "+err.Error())
 				h.bot.Send(reply)
 				return
 			}

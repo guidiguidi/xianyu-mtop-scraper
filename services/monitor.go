@@ -194,29 +194,29 @@ func (s *MonitorService) sendNotification(userID int64, keyword string, item goo
 	}
 	escapedPrice := html.EscapeString(item.Price)
 
-	escapedArea := "Не указан"
+	escapedArea := "Unspecified"
 	if tArea != "" {
 		escapedArea = html.EscapeString(tArea)
 	}
 
-	escapedNickname := "Не указан"
+	escapedNickname := "Unspecified"
 	if item.UserNickname != "" {
 		escapedNickname = html.EscapeString(item.UserNickname)
 	}
 
-	escapedWant := "Новый лот"
+	escapedWant := "New listing"
 	if item.WantCount != "" {
 		escapedWant = html.EscapeString(item.WantCount)
 	}
 
 	caption := fmt.Sprintf(
-		"🔔 <b>Новое поступление! (Монитор: %s)</b>\n\n"+
+		"🔔 <b>New Listing Alert! (Monitor: %s)</b>\n\n"+
 			"🐟 <b>%s</b>\n\n"+
-			"💰 Цена: <code>%s</code>\n"+
-			"📍 Регион: %s\n"+
-			"👤 Продавец: %s\n"+
+			"💰 Price: <code>%s</code>\n"+
+			"📍 Region: %s\n"+
+			"👤 Seller: %s\n"+
 			"📦 %s\n\n"+
-			"<a href=\"%s\">🔗 Купить на Xianyu</a>",
+			"<a href=\"%s\">🔗 View on Xianyu</a>",
 		escapedKeyword,
 		escapedTitle,
 		escapedPrice,
@@ -239,7 +239,7 @@ func (s *MonitorService) sendNotification(userID int64, keyword string, item goo
 	if item.UserID != "" {
 		photoMsg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData("👤 Продавец", fmt.Sprintf("seller:%s", item.UserID)),
+				tgbotapi.NewInlineKeyboardButtonData("👤 Seller", fmt.Sprintf("seller:%s", item.UserID)),
 			),
 		)
 	}

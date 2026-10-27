@@ -2,34 +2,26 @@ package services
 
 import (
 	"log"
-	"regexp"
 	"strings"
 )
 
-var cyrillicRe = regexp.MustCompile(`[\x{0400}-\x{04FF}]`)
-
-// ExpandQuery takes a user's search query (Russian/English/etc.) and transforms it into optimized Chinese terms for Xianyu.
+// ExpandQuery takes a user search query and expands synonyms and tags for Xianyu / Goofish.
 func ExpandQuery(query string) string {
 	query = strings.TrimSpace(query)
 	if query == "" {
 		return ""
 	}
 
-	// 1. Lowercase for synonym matching
 	lower := strings.ToLower(query)
 
-	// Custom Russian/English slang and brand synonym mappings for Xianyu
+	// Brand and slang mappings for Xianyu
 	brandSynonyms := map[string]string{
-		"баленсиага":   "balenciaga 巴黎世家",
-		"хром хартс":   "chrome hearts 克罗心",
-		"хромы":        "chrome hearts 克罗心",
-		"маржела":      "maison margiela 马吉拉",
-		"арктерикс":    "始祖鸟 arcteryx",
-		"найк":         "nike 耐克",
-		"адидас":       "adidas 阿迪дас",
-		"ветмо":        "vetements vtm",
-		"рикроуэнс":    "ro rick owens",
-		"рик овенс":    "ro rick owens",
+		"rick owens":    "ro rick owens",
+		"chrome hearts": "chrome hearts 克罗心",
+		"margiela":      "maison margiela 马吉拉",
+		"arcteryx":      "始祖鸟 arcteryx",
+		"balenciaga":    "balenciaga 巴黎世家",
+		"vetements":     "vetements vtm",
 	}
 
 	for k, v := range brandSynonyms {
@@ -38,31 +30,32 @@ func ExpandQuery(query string) string {
 		}
 	}
 
-	// Term mappings
+	// English category mappings to Chinese marketplace tags
 	termMappings := map[string]string{
-		"штаны":     "裤子",
-		"брюки":     "裤子",
-		"куртка":    "外套",
-		"ветровка":  "外套",
-		"пуховик":   "羽绒服",
-		"худи":      "卫衣",
-		"зипка":     "拉链卫衣",
-		"зип":       "拉链",
-		"свитшот":   "卫衣",
-		"футболка":  "T恤",
-		"майка":     "背心",
-		"кроссовки": "鞋",
-		"кеды":      "鞋",
-		"обувь":     "鞋",
-		"сумка":     "包",
-		"рюкзак":    "双肩包",
-		"кольцо":    "戒指",
-		"ремень":    "腰带",
-		"кепка":     "帽子",
-		"шапка":     "帽子",
-		"новые":     "全新",
-		"новый":     "全新",
-		"оригинал":  "正品 保真",
+		"pants":     "裤子",
+		"trousers":  "裤子",
+		"jacket":    "外套",
+		"windbreaker": "外套",
+		"down jacket": "羽绒服",
+		"puffer":    "羽绒服",
+		"hoodie":    "卫衣",
+		"zip hoodie": "拉链卫衣",
+		"sweatshirt": "卫衣",
+		"t-shirt":   "T恤",
+		"tee":       "T恤",
+		"tank top":  "背心",
+		"shoes":     "鞋",
+		"sneakers":  "鞋",
+		"boots":     "靴子",
+		"bag":       "包",
+		"backpack":  "双肩包",
+		"ring":      "戒指",
+		"belt":      "腰带",
+		"cap":       "帽子",
+		"hat":       "帽子",
+		"brand new": "全新",
+		"new":       "全新",
+		"authentic": "正品 保真",
 	}
 
 	for k, v := range termMappings {
@@ -71,24 +64,8 @@ func ExpandQuery(query string) string {
 		}
 	}
 
-	// 2. If the query still contains Cyrillic characters, use Google Translate to translate them to Chinese
-	if cyrillicRe.MatchString(lower) {
-		log.Printf("[QueryExpander] Translating query to Chinese: '%s'", lower)
-		if GlobalTranslator != nil {
-			translated := GlobalTranslator.Translate(lower, "auto", "ZH")
-			if translated != "" && translated != lower {
-				lower = translated
-			}
-		}
-	}
-
-	// Ensure common brands are represented well
-	lower = strings.ReplaceAll(lower, "rick owens", "ro rick owens")
-	lower = strings.ReplaceAll(lower, "chrome hearts", "chrome hearts 克罗心")
-
-	// Clean up whitespaces
-	words := strings.Fields(lower)
 	// Remove duplicate words in query
+	words := strings.Fields(lower)
 	seen := make(map[string]bool)
 	var uniqueWords []string
 	for _, w := range words {

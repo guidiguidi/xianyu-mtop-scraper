@@ -13,7 +13,7 @@ func TestHasCJK(t *testing.T) {
 	}{
 		{"Hello World", false},
 		{"12345!@#$", false},
-		{"Привет, как дела?", false},
+		{"Hello, how are you?", false},
 		{"iPhone 15 Pro Max", false},
 		{"全新闲鱼宝贝", true},       // Simplified Chinese
 		{"閒魚寶貝", true},         // Traditional Chinese
